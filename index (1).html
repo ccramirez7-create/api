@@ -1,0 +1,173 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capacitaciones - Supabase</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+            background: #f4f6f9;
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th, td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background: #2563eb;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background: #f2f2f2;
+        }
+
+        #mensaje {
+            margin: 15px 0;
+            color: #555;
+        }
+
+        button {
+            padding: 10px 18px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2>Listado de capacitaciones</h2>
+
+    <button onclick="consultarCapacitaciones()">
+        Consultar datos
+    </button>
+
+    <p id="mensaje"></p>
+
+    <table>
+        <thead>
+            <tr id="encabezados"></tr>
+        </thead>
+
+        <tbody id="tablaDatos"></tbody>
+    </table>
+
+    <script>
+
+        // Configuración de Supabase
+        const URL = "https://meezkxamrwtbawcssgbl.supabase.co/rest/v1/capacitaciones?select=*";
+
+        const API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1lZXpreGFtcnd0YmF3Y3NzZ2JsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ0ODkyMTEsImV4cCI6MjExMDA2NTIxMX0.HGYdhhxs7Yt4c7ohcOB1TBosEJxcpcR3lO_tHIWTWkE";
+
+        // Función asíncrona para consultar la API
+        async function consultarCapacitaciones() {
+
+            const mensaje = document.getElementById("mensaje");
+            const encabezados = document.getElementById("encabezados");
+            const tablaDatos = document.getElementById("tablaDatos");
+
+            mensaje.textContent = "Consultando información...";
+            encabezados.innerHTML = "";
+            tablaDatos.innerHTML = "";
+
+            try {
+
+                const respuesta = await fetch(URL, {
+                    method: "GET",
+
+                    headers: {
+                        "apikey": API_KEY,
+                        "Authorization": `Bearer ${API_KEY}`,
+                        "Content-Type": "application/json"
+                    }
+                });
+
+                // Validar respuesta HTTP
+                if (!respuesta.ok) {
+                    throw new Error(
+                        `Error HTTP: ${respuesta.status} - ${respuesta.statusText}`
+                    );
+                }
+
+                // Convertir respuesta a JSON
+                const datos = await respuesta.json();
+
+                console.log("Datos recibidos:", datos);
+
+                if (datos.length === 0) {
+                    mensaje.textContent = "No hay registros disponibles.";
+                    return;
+                }
+
+                // Crear encabezados dinámicamente
+                const columnas = Object.keys(datos[0]);
+
+                columnas.forEach(columna => {
+                    const th = document.createElement("th");
+                    th.textContent = columna;
+                    encabezados.appendChild(th);
+                });
+
+                // Crear filas dinámicamente
+                datos.forEach(registro => {
+
+                    const fila = document.createElement("tr");
+
+                    columnas.forEach(columna => {
+
+                        const celda = document.createElement("td");
+
+                        const valor = registro[columna];
+
+                        celda.textContent =
+                            valor === null ? "" :
+                            typeof valor === "object" ?
+                            JSON.stringify(valor) :
+                            valor;
+
+                        fila.appendChild(celda);
+                    });
+
+                    tablaDatos.appendChild(fila);
+                });
+
+                mensaje.textContent =
+                    `Se encontraron ${datos.length} registros.`;
+
+            } catch (error) {
+
+                console.error("Error al consultar Supabase:", error);
+
+                mensaje.textContent =
+                    "Error al consultar la API: " + error.message;
+            }
+        }
+
+    </script>
+
+</body>
+</html>
